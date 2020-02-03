@@ -1,9 +1,8 @@
 # mkdocs2tex
 
-Converts a bunch of MkDocs .md files to LaTeX format.
+Converts a tree of MkDocs .md files to LaTeX format, with table of contents, list of figures, list of tables and properly placed and dimensioned images.
 
-Converts the whole documentation contents into an `output.tex` file, that can be
-included in a LaTeX template for subsequent PDF compilation.
+Reads the whole documentation contents, adjusts it, converts it into LaTeX format using pandoc, adjusts that LaTeX content, writes the result to an `output.tex` file.
 
 ## Requirements
 
@@ -12,7 +11,7 @@ included in a LaTeX template for subsequent PDF compilation.
 
 ## Usage
 
-`python3 ./mkdocs2tex.py`
+`python3 ./mkdocs2tex.py -i /path/to/mkdocs.yml`
 
 ### Options
 
@@ -28,11 +27,9 @@ optional arguments:
   -t TMP, --tmp TMP     directory for temporary files during conversion
 ```
 
-Note that if you use `--output` option, you'll have to change the LaTeX template `\input{}` command.
+Caveat: use absolute paths
 
 ## Build PDF from generated LaTeX
-
-An example `template.tex` is given, that `\input{}s` the generated `output.tex`. Take it as an example to build your own template.
 
 ### Requirements
 
@@ -40,11 +37,12 @@ An example `template.tex` is given, that `\input{}s` the generated `output.tex`.
  * texlive-latex-extra
  * texlive-bibtex-extra
  * texlive-font-utils
+ * lmodern
  * latexmk
 
 ### Build PDF
 
-`latexmk -f -pdf -interaction=nonstopmode template.tex`
+`latexmk -f -pdf -interaction=nonstopmode output.tex`
 
 ## Contributors
 

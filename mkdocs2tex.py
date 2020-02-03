@@ -56,8 +56,7 @@ def exploreAndMerge(docs_dir, nav, output = '', level = 0):
         if type(d) is str:
             filepath = os.path.join(docs_dir, d)
             f = open(filepath, 'r')
-            # Triple "../" because file will be compiled from pdf_build/latex_models @TODO
-            path = os.path.join('../../..', os.path.dirname(filepath))
+            path = os.path.dirname(filepath)
             s = f.read() + "\n"
             # Modification of image and links paths
             s = re.sub(r'(\!\[.+\]\()(.+)(\))', r'\1'+path+r'/\2\3', s)
@@ -84,29 +83,23 @@ def convertMdToTex(filePath):
     os.system(
         'pandoc {} -f markdown -t latex -s -o {}'.format(filePath, mergedTexFile)
     )
-    # Remove header of tex file
-    bContent = False
-    ls = []
+    # Adjust generated content
+    ls = ''
     with open(mergedTexFile, 'r') as f:
         for line in f:
-            if line.strip() == '\\end{document}':
-                bContent = False
-                exit
-            if bContent:
-                ls.append(line)
-            if line.strip() == '\\begin{document}':
-                bContent = True
+            # ls.append(line)
+            l = line
+            # adjust images max width/height
+            l = l.replace('\\includegraphics', '\\includegraphics[max size={\\textwidth}{0.9\\textheight}]')
+            # force figures placement
+            l = l.replace('\\begin{figure}', '\\begin{figure}[h!]')
+            ls = ls + l
 
-    # Adjust generated content
-    for i, line in enumerate(ls):
-        l = line
-        # adjust images max width/height
-        l = l.replace('\\includegraphics', '\\includegraphics[max size={\\textwidth}{0.9\\textheight}]')
-        # force figures placement
-        l = l.replace('\\begin{figure}', '\\begin{figure}[h!]')
-        # make som subsubsections invisible (for CHANGELOG)
-        l = re.sub(r'(\\subsubsection)({[0-9]+.[0-9]+.[0-9]+)', r'\1*\2', l)
-        ls[i] = l
+    # Inject custom contents
+    ls = ls.replace('\\author{}', '\\usepackage[section]{placeins}\n\n\\author{}')
+    ls = ls.replace('\\begin{document}', '\\begin{document}\n\n\\tableofcontents')
+    ls = ls.replace('\\end{document}', '\\listoffigures\n\\listoftables\n\n\\end{document}')
+
 
     # Save merged LaTeX file
     with open(mergedTexFile, 'w') as f:
@@ -132,12 +125,10 @@ if __name__ == '__main__':
     os.makedirs(buildDir, exist_ok=True)
     mergedTexFile = os.path.join(buildDir, 'merged.tex')
 
-    print("Input: [{}], output: [{}], temp: [{}]".format(inputFile, outputFile, buildDir))
-
     # Read config
     dMkdocsYaml = readConfig(inputFile)
 
-    # Create string with merged MarkDown
+    # Merge MarkDown into string
     docsDir = dMkdocsYaml['docs_dir']
     if not os.path.isabs(docsDir):
         docsDir = os.path.join(os.path.dirname(inputFile), docsDir)

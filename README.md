@@ -9,6 +9,11 @@ Reads the whole documentation contents, adjusts it, converts it into LaTeX forma
  * python3
  * pandoc
 
+## Installation
+
+ * Clone this repo
+ * Run this to install necessary python packages: `pip install -r requirements.txt`
+
 ## Usage
 
 `python3 ./mkdocs2tex.py -i /path/to/mkdocs.yml`

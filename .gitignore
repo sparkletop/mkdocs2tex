@@ -1,3 +1,4 @@
 /tmp
 output.tex
 *.pdf
+.venv

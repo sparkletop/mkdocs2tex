@@ -78,7 +78,7 @@ def exploreAndMerge(docs_dir, nav, output = '', level = 0):
     @param output merged markdown files content
     """
 
-    # No nav specified in MkDocs yaml, build one from 
+    # No nav specified in MkDocs yaml, build one from contents of docs_dir
     if nav is None:
         nav = buildNavTree(docs_dir)
 

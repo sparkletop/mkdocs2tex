@@ -43,6 +43,32 @@ def shiftMdHeaders(mdContent, level):
     return "\n".join(lMd)
 
 
+# Build a navigation tree in alphanumeric order based on directory tree and .md files
+def buildNavTree(docs_dir):
+    nav = []
+    
+    # Add .md files in current directory
+    files = [f for f in os.listdir(docs_dir) if os.path.isfile(os.path.join(docs_dir, f)) and f.endswith(".md")]
+    files.sort()
+    nav.extend(files)
+
+    # Recurse into subdirectories
+    dirs = [d for d in os.listdir(docs_dir) if os.path.isdir(os.path.join(docs_dir, d))]
+    dirs.sort()
+    for dir in dirs:
+        sub_nav = buildNavTree(os.path.join(docs_dir, dir))
+
+        # Prepend subdirectory to filename
+        for i, element in enumerate(sub_nav):
+            if type(element) is str:
+                sub_nav[i] = os.path.join(dir, element)
+        
+        if sub_nav: # only add non-empty subdirectories
+            nav.append({dir: sub_nav})
+
+    return nav
+
+
 # Browses MkDocs configuration file and merges .md files
 def exploreAndMerge(docs_dir, nav, output = '', level = 0):
     """
@@ -50,6 +76,12 @@ def exploreAndMerge(docs_dir, nav, output = '', level = 0):
     @param nav dictionnary with the structure to explore
     @param output merged markdown files content
     """
+
+    # No nav specified in MkDocs yaml, build one from 
+    if nav is None:
+        nav = buildNavTree(docs_dir)
+
+    # Navigate file/directory tree
     if type(nav) is str:
         nav = [nav]
     for d in nav:
@@ -129,10 +161,11 @@ if __name__ == '__main__':
     dMkdocsYaml = readConfig(inputFile)
 
     # Merge MarkDown into string
-    docsDir = dMkdocsYaml['docs_dir']
+    docsDir = dMkdocsYaml.get('docs_dir') or 'docs'
     if not os.path.isabs(docsDir):
         docsDir = os.path.join(os.path.dirname(inputFile), docsDir)
-    s = exploreAndMerge(docsDir, dMkdocsYaml['nav'])
+    
+    s = exploreAndMerge(docsDir, dMkdocsYaml.get('nav'))
 
     # Remove internal links
     s = re.sub(r'\[([^/]+)\]\([^ ]+\.md\)', r'\1', s)
